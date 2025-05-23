@@ -27,13 +27,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/auth/**", "/perfil", "/login", "/registro",
+                    "/auth/**", "/perfil", "/login", "/registro","/contacto",
                     "/css/**", "/js/**", "/img/**"
                 ).permitAll()
                 .requestMatchers(
-                    "/ofertas", "/ofertas/crear", "/ofertas/guardar", 
-                    "/ofertas/editar/**", "/ofertas/eliminar/**"
+                    "/auth/**", "/perfil", "/login", "/registro","/contacto",
+                    "/css/**", "/js/**", "/img/**"
                 ).permitAll()
+
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

@@ -22,27 +22,39 @@ public class ViewController {
 
     @GetMapping("/login")
     public String loginPage() {
-        return "login"; // Vista 'login.html' en el directorio de plantillas
+        return "login";
     }
 
     @GetMapping("/registro")
     public String showRegistroPage(Model model) {
         model.addAttribute("usuario", new Usuario());
-
-        // Obtener la lista de roles de la base de datos
-        List<Rol> roles = rolService.findAll();
-        model.addAttribute("roles", roles);  // Pasar la lista de roles al modelo
-
+        model.addAttribute("roles", rolService.findAll());
         return "registro";
     }
 
     @PostMapping("/registro")
-    public String registrarUsuario(@ModelAttribute Usuario usuario, Model model) {
-        boolean registrado = usuarioService.registrarUsuario(usuario);
-        if (!registrado) {
-            model.addAttribute("error", "El usuario o email ya están en uso.");
-            return "registro";
-        }
-        return "redirect:/login";
+public String registrarUsuario(
+    @ModelAttribute Usuario usuario,
+    @RequestParam("rolId") Long rolId,
+    Model model
+) {
+    Rol rol = rolService.findById(rolId);
+    if (rol == null) {
+        model.addAttribute("error", "Rol no encontrado.");
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("roles", rolService.findAll());
+        return "registro";
+    }
+
+    usuario.setRoles(List.of(rol));
+
+    boolean registrado = usuarioService.registrarUsuario(usuario);
+    if (!registrado) {
+        model.addAttribute("error", "El usuario o email ya están en uso.");
+        model.addAttribute("roles", rolService.findAll());
+        return "registro";
+    }
+
+    return "redirect:/login";
     }
 }

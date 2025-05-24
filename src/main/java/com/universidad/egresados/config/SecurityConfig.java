@@ -1,6 +1,5 @@
 package com.universidad.egresados.config;
 
-import com.universidad.egresados.service.UsuarioDetailsServiceImpl;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,12 +23,6 @@ import java.time.Duration;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UsuarioDetailsServiceImpl usuarioDetailsService;
-
-    public SecurityConfig(UsuarioDetailsServiceImpl usuarioDetailsService) {
-        this.usuarioDetailsService = usuarioDetailsService;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2ResourceServerProperties properties) throws Exception {
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
@@ -38,37 +31,32 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/", "/auth/**", "/perfil", "/login", "/registro", "/contacto",
-                    "/css/**", "/js/**", "/img/**", "/public/**"
-                ).permitAll()
+                .requestMatchers("/", "/auth/**", "/perfil", "/registro", "/contacto",
+                    "/css/**", "/js/**", "/img/**", "/public/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/empresa/**").hasRole("EMPRESA")
                 .requestMatchers("/egresado/**").hasRole("EGRESADO")
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/perfil", true)
-                .permitAll()
-            )
             .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/perfil", true)
                 .userInfoEndpoint(userInfo -> userInfo
-                    .oidcUserService(new OidcUserService()) // Usa el default sin intentar setear validador
+                    .oidcUserService(new OidcUserService())
                 )
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtConverter)
-                    .decoder(jwtDecoder(properties))  // Aquí configuras el decoder con tolerancia
+                    .decoder(jwtDecoder(properties))
                 )
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/")
+                .logoutSuccessUrl("https://dev-6v1unrgk3o6a56fo.us.auth0.com/v2/logout?client_id=0NARD1y0LJkjHhKZ80oYIWl6FOBH8GcA&returnTo=http://localhost:8080/")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
-            )
-            .userDetailsService(usuarioDetailsService);
+            );
 
         return http.build();
     }
@@ -79,7 +67,7 @@ public class SecurityConfig {
             JwtDecoders.fromIssuerLocation(properties.getJwt().getIssuerUri());
 
         OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(
-            new JwtTimestampValidator(Duration.ofMinutes(10))
+            new JwtTimestampValidator(Duration.ofMinutes(5))
         );
 
         jwtDecoder.setJwtValidator(withClockSkew);

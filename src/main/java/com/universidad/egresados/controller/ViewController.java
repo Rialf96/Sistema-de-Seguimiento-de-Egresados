@@ -20,10 +20,6 @@ public class ViewController {
         this.rolService = rolService;
     }
 
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login";
-    }
 
     @GetMapping("/registro")
     public String showRegistroPage(Model model) {
